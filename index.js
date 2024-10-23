@@ -1,8 +1,8 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt'); // Para criptografar senhas
-const jwt = require('jsonwebtoken'); // Para gerar e verificar tokens JWT
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const Usuario = require("./models/Usuario");
 const Genero = require("./models/Genero");
 const Musica = require("./models/Musica");
@@ -23,17 +23,13 @@ app.post('/usuario', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const senhaCriptografada = await bcrypt.hash(senha, salt);
 
-    const usuario = {
-        nome,
-        email,
-        senha: senhaCriptografada,
-    };
+    const usuario = { nome, email, senha: senhaCriptografada };
 
     try {
         await Usuario.create(usuario);
         res.status(201).json({ message: "Usuário inserido no sistema" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -60,38 +56,56 @@ app.post('/login', async (req, res) => {
 });
 
 // Criar música
+// Criar música
 app.post('/musica', async (req, res) => {
-    const { titulo, artista, album, duracao, genero } = req.body;
+    const { tituloMusica, artista, album, duracao, genero } = req.body;
 
     const musica = {
-        titulo,
+        tituloMusica,
         artista,
         album,
         duracao,
-        genero,
+        genero
     };
 
     try {
         await Musica.create(musica);
         res.status(201).json({ message: "Música inserida com sucesso" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
+
+// Atualizar música
+app.patch("/musica/:id", async (req, res) => {
+    const id = req.params.id;
+    const { tituloMusica, artista, album, duracao, genero } = req.body;
+
+    const musica = { tituloMusica, artista, album, duracao, genero };
+
+    try {
+        const updateMusica = await Musica.updateOne({ _id: id }, musica);
+        if (updateMusica.matchedCount === 0) {
+            return res.status(422).json({ message: "Música não encontrada!" });
+        }
+        res.status(200).json(musica);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+});
+
 
 // Criar gênero
 app.post('/genero', async (req, res) => {
     const { nomeGenero } = req.body;
 
-    const genero = {
-        nomeGenero,
-    };
+    const genero = { nomeGenero };
 
     try {
         await Genero.create(genero);
         res.status(201).json({ message: "Gênero inserido no sistema" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -101,14 +115,14 @@ app.get("/usuario", async (req, res) => {
         const usuarios = await Usuario.find();
         res.status(200).json({ usuarios });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
 // Ler músicas
 app.get("/musica", async (req, res) => {
     try {
-        const musicas = await Musica.find().populate('genero');
+        const musicas = await Musica.find().populate('genero'); // Certifique-se de que 'genero' esteja referenciado corretamente
         res.status(200).json(musicas);
     } catch (error) {
         res.status(500).json({ erro: 'Erro ao ler músicas.' });
@@ -121,7 +135,7 @@ app.get("/genero", async (req, res) => {
         const generos = await Genero.find();
         res.status(200).json(generos);
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -144,16 +158,16 @@ app.patch("/usuario/:id", async (req, res) => {
         }
         res.status(200).json(usuario);
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
 // Atualizar música
 app.patch("/musica/:id", async (req, res) => {
     const id = req.params.id;
-    const { titulo, artista, album, duracao, genero } = req.body;
+    const { nomeMusica } = req.body;
 
-    const musica = { titulo, artista, album, duracao, genero };
+    const musica = { nomeMusica };
 
     try {
         const updateMusica = await Musica.updateOne({ _id: id }, musica);
@@ -162,7 +176,7 @@ app.patch("/musica/:id", async (req, res) => {
         }
         res.status(200).json(musica);
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -180,7 +194,7 @@ app.patch("/genero/:id", async (req, res) => {
         }
         res.status(200).json(genero);
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -197,7 +211,7 @@ app.delete("/usuario/:id", async (req, res) => {
         await Usuario.deleteOne({ _id: id });
         res.status(200).json({ message: "Usuário removido com sucesso!" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -214,7 +228,7 @@ app.delete("/musica/:id", async (req, res) => {
         await Musica.deleteOne({ _id: id });
         res.status(200).json({ message: "Música removida com sucesso!" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -231,7 +245,7 @@ app.delete("/genero/:id", async (req, res) => {
         await Genero.deleteOne({ _id: id });
         res.status(200).json({ message: "Gênero removido com sucesso!" });
     } catch (error) {
-        res.status(500).json({ erro: error });
+        res.status(500).json({ erro: error.message });
     }
 });
 
@@ -244,5 +258,5 @@ mongoose.connect('mongodb://localhost:27017/appMusica')
         });
     })
     .catch((err) => {
-        console.log('Erro ao conectar ao banco de dados: ' + err);
+        console.log('Erro ao conectar ao banco de dados: ' + err.message);
     });
